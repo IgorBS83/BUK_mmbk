@@ -36,7 +36,7 @@
 #define ALLBUS_COM_CHANGE_OUT 3
 
 #define OUT_MESSAGE_SIZE_COM_1  6
-#define OUT_MESSAGE_SIZE_COM_3  23
+#define OUT_MESSAGE_SIZE_COM_3  24
 
 #define U3_BUFFER_SIZE (1 << 8)
 #define CntAdd(cnt, add, size) ((cnt + add) & (size - 1))
@@ -51,12 +51,13 @@ uint16_t U3RX_cnt, U3TX_cnt, U3TX_size, U3RX_cnt_slave;
 uint8_t U3RX_buf[U3_BUFFER_SIZE], U3TX_buf[U3_BUFFER_SIZE], Out_Data[U3_BUFFER_SIZE];
 
 
-uint8_t *I2C_data = Out_Data + 26;
+uint8_t *I2C_data = Out_Data + 26-5;
 uint8_t I2C_addr[3] = {0x20 << 1, 0x21 << 1, 0x22 << 1};
 int fl_i2c_start;
 int i2c_cnt;
 int diode_sensor_cnt = 0, diode_msg_cnt = 0;
 int diode_sensor_fl = 0, diode_msg_fl = 0;
+int rs422_start_en = true;
 uint16_t altera_diodes = 0;
 
 
@@ -121,7 +122,7 @@ void EXTI_init()
 	//PC0
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
 	GPIOC->MODER &= ~(GPIO_MODER_MODER0);//input
-	GPIOD->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR0_1;
+	GPIOC->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR0_1;
 	
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;	
 	EXTI->RTSR = EXTI_FTSR_TR0;
@@ -156,6 +157,7 @@ void mI2C_init()
 }
 void mUart_init()
 {
+	/*
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN | RCC_AHB1ENR_GPIOAEN;
 	//RS-232
 	GPIOC->MODER |= GPIO_MODER_MODER10_1 | GPIO_MODER_MODER11_1;
@@ -174,17 +176,36 @@ void mUart_init()
 			USART_CR1_TE |
 			USART_CR1_RE |
 			USART_CR1_RXNEIE;
+	
+*/		
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+	//RS-422
+	GPIOA->MODER |= GPIO_MODER_MODER2_1 | GPIO_MODER_MODER3_1 | GPIO_MODER_MODER0_0;
+	GPIOA->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR2 | GPIO_OSPEEDER_OSPEEDR3| GPIO_OSPEEDER_OSPEEDR0;
+	GPIOA->AFR[0] |= (7 << 8) | (7 << 12);
+
+	NVIC_EnableIRQ(USART2_IRQn);
+	RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
+	USART2->BRR = (11 << 4)| 3;//= 42MHz / (8 * (2 - 0) * 11.393)460.8	
+	
+	USART2->CR3 = 1 << 7;//DMA mode is enabled for transmission
+	USART2->CR1 = 
+			USART_CR1_OVER8 |
+			USART_CR1_UE |
+			USART_CR1_TE |
+			USART_CR1_RE |
+			USART_CR1_RXNEIE;	
 }
 
 void mDMA_init(void)
 {
 	RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
-	DMA1_Stream3->CR = 
+	DMA1_Stream6->CR = 
 			(4 << 25) | //Channel 4
 			(1 << 10) | //Memory address pointer is incremented after each data transfer
 			(1 << 6); //Memory-to-peripheral
-	DMA1_Stream3->PAR = (uint32_t)&(USART3->DR);
-	DMA1_Stream3->M0AR = (uint32_t)&U3TX_buf;
+	DMA1_Stream6->PAR = (uint32_t)&(USART2->DR);
+	DMA1_Stream6->M0AR = (uint32_t)&U3TX_buf;
 }
 
 void mFSMC_init(void)
@@ -346,14 +367,14 @@ void I2C2_EV_IRQHandler()
 	else if(sr1 & I2C_SR1_TXE) I2C2->DR = I2C_data[i2c_cnt];
 }
 
-void USART3_IRQHandler()
+void USART2_IRQHandler()
 {	
-	if(USART3->SR & USART_SR_RXNE)
+	if(USART2->SR & USART_SR_RXNE)
 	{
-		U3RX_buf[U3RX_cnt] = USART3->DR;
+		U3RX_buf[U3RX_cnt] = USART2->DR;
 		U3RX_cnt = CntInc(U3RX_cnt, U3_BUFFER_SIZE);
 	}
-	USART3->SR = 0;
+	USART2->SR = 0;
 }
 
 void form_message_mmbk()
@@ -412,11 +433,15 @@ void applicate_in_messages(uint8_t command, uint8_t first)
 	}
 	if(fl_send_answer)
 	{
+		if(rs422_start_en){
+			rs422_start_en = false;
+			GPIOA->ODR |= GPIO_ODR_ODR_0; //rs422 enable
+		}	
 	  ALLBUS_send(MASTER_ALLBUS_ADDR, command, message_size, U3TX_buf, Out_Data);
-		USART3->SR &= ~USART3->SR & USART_SR_TC;
-		DMA1->LIFCR |= DMA_LIFCR_CTCIF3 | DMA_LIFCR_CHTIF3;
-		DMA1_Stream3->NDTR = message_size + 7;
-		DMA1_Stream3->CR |= 1;
+		USART2->SR &= ~USART2->SR & USART_SR_TC;
+		DMA1->HIFCR |= DMA_HIFCR_CTCIF6 | DMA_HIFCR_CHTIF6;
+		DMA1_Stream6->NDTR = message_size + 7;
+		DMA1_Stream6->CR |= 1;
 		diode_msg_cnt++;
 	}
 }
@@ -465,9 +490,9 @@ int main()
 			diode_msg_fl = !diode_msg_fl;
 		}
 		if(diode_sensor_cnt >= DIODE_SWITCH) 
-		{
+		{		
 			diode_sensor_cnt = 0;
-			if(diode_sensor_fl) altera_diodes |= DIODE_HL2;
+			if(diode_sensor_fl) altera_diodes |= DIODE_HL2;		
 			else altera_diodes &= ~DIODE_HL2;
 			diode_sensor_fl = !diode_sensor_fl;
 		}
