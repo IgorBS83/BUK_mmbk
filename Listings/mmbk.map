@@ -312,8 +312,8 @@ Image Symbol Table
     i.mPLL_init                              0x08000ab0   Section        0  main.o(i.mPLL_init)
     i.mUart_init                             0x08000b68   Section        0  main.o(i.mUart_init)
     i.main                                   0x08000bd4   Section        0  main.o(i.main)
-    x$fpl$fpinit                             0x08000cd8   Section       10  fpinit.o(x$fpl$fpinit)
-    $v0                                      0x08000cd8   Number         0  fpinit.o(x$fpl$fpinit)
+    x$fpl$fpinit                             0x08000cec   Section       10  fpinit.o(x$fpl$fpinit)
+    $v0                                      0x08000cec   Number         0  fpinit.o(x$fpl$fpinit)
     .data                                    0x20000000   Section      512  allbus.o(.data)
     .data                                    0x20000200   Section       64  main.o(.data)
     .bss                                     0x20000240   Section      768  main.o(.bss)
@@ -528,12 +528,12 @@ Image Symbol Table
     mI2C_init                                0x08000a11   Thumb Code   138  main.o(i.mI2C_init)
     mPLL_init                                0x08000ab1   Thumb Code   166  main.o(i.mPLL_init)
     mUart_init                               0x08000b69   Thumb Code    94  main.o(i.mUart_init)
-    main                                     0x08000bd5   Thumb Code   222  main.o(i.main)
-    _fp_init                                 0x08000cd9   Thumb Code    10  fpinit.o(x$fpl$fpinit)
-    __fplib_config_fpu_vfp                   0x08000ce1   Thumb Code     0  fpinit.o(x$fpl$fpinit)
-    __fplib_config_pureend_doubles           0x08000ce1   Thumb Code     0  fpinit.o(x$fpl$fpinit)
-    Region$$Table$$Base                      0x08000ce4   Number         0  anon$$obj.o(Region$$Table)
-    Region$$Table$$Limit                     0x08000d04   Number         0  anon$$obj.o(Region$$Table)
+    main                                     0x08000bd5   Thumb Code   242  main.o(i.main)
+    _fp_init                                 0x08000ced   Thumb Code    10  fpinit.o(x$fpl$fpinit)
+    __fplib_config_fpu_vfp                   0x08000cf5   Thumb Code     0  fpinit.o(x$fpl$fpinit)
+    __fplib_config_pureend_doubles           0x08000cf5   Thumb Code     0  fpinit.o(x$fpl$fpinit)
+    Region$$Table$$Base                      0x08000cf8   Number         0  anon$$obj.o(Region$$Table)
+    Region$$Table$$Limit                     0x08000d18   Number         0  anon$$obj.o(Region$$Table)
     crctab                                   0x20000000   Data         512  allbus.o(.data)
     U3RX_cnt                                 0x20000200   Data           2  main.o(.data)
     U3TX_cnt                                 0x20000202   Data           2  main.o(.data)
@@ -565,9 +565,9 @@ Memory Map of the image
 
   Image Entry point : 0x08000249
 
-  Load Region LR_1 (Base: 0x08000000, Size: 0x00000f44, Max: 0xffffffff, ABSOLUTE, COMPRESSED[0x00000f14])
+  Load Region LR_1 (Base: 0x08000000, Size: 0x00000f58, Max: 0xffffffff, ABSOLUTE, COMPRESSED[0x00000f28])
 
-    Execution Region ER_RO (Base: 0x08000000, Size: 0x00000d04, Max: 0xffffffff, ABSOLUTE)
+    Execution Region ER_RO (Base: 0x08000000, Size: 0x00000d18, Max: 0xffffffff, ABSOLUTE)
 
     Base Addr    Size         Type   Attr      Idx    E Section Name        Object
 
@@ -648,10 +648,10 @@ Memory Map of the image
     0x08000a10   0x000000a0   Code   RO          100    i.mI2C_init         main.o
     0x08000ab0   0x000000b8   Code   RO          101    i.mPLL_init         main.o
     0x08000b68   0x0000006c   Code   RO          102    i.mUart_init        main.o
-    0x08000bd4   0x00000104   Code   RO          103    i.main              main.o
-    0x08000cd8   0x0000000a   Code   RO          341    x$fpl$fpinit        fz_wm.l(fpinit.o)
-    0x08000ce2   0x00000002   PAD
-    0x08000ce4   0x00000020   Data   RO          409    Region$$Table       anon$$obj.o
+    0x08000bd4   0x00000118   Code   RO          103    i.main              main.o
+    0x08000cec   0x0000000a   Code   RO          341    x$fpl$fpinit        fz_wm.l(fpinit.o)
+    0x08000cf6   0x00000002   PAD
+    0x08000cf8   0x00000020   Data   RO          409    Region$$Table       anon$$obj.o
 
 
     Execution Region ER_RW (Base: 0x20000000, Size: 0x00000240, Max: 0xffffffff, ABSOLUTE, COMPRESSED[0x00000210])
@@ -679,13 +679,13 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
 
-       432          6          0        512          0     198601   allbus.o
-      1982        326          0         64        768      36283   main.o
-        64         26        392          0       1536        856   startup_stm32f407xx.o
-       100         18          0          0          0        525   system_stm32f4xx.o
+       432          6          0        512          0     253069   allbus.o
+      2002        326          0         64        768      36435   main.o
+        64         26        392          0       1536        868   startup_stm32f407xx.o
+       100         18          0          0          0        533   system_stm32f4xx.o
 
     ----------------------------------------------------------------------
-      2582        376        424        576       2304     236265   Object Totals
+      2602        376        424        576       2304     290905   Object Totals
          0          0         32          0          0          0   (incl. Generated)
          4          0          0          0          0          0   (incl. Padding)
 
@@ -736,15 +736,15 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-      2908        392        424        576       2400     235309   Grand Totals
-      2908        392        424        528       2400     235309   ELF Image Totals (compressed)
-      2908        392        424        528          0          0   ROM Totals
+      2928        392        424        576       2400     289949   Grand Totals
+      2928        392        424        528       2400     289949   ELF Image Totals (compressed)
+      2928        392        424        528          0          0   ROM Totals
 
 ==============================================================================
 
-    Total RO  Size (Code + RO Data)                 3332 (   3.25kB)
+    Total RO  Size (Code + RO Data)                 3352 (   3.27kB)
     Total RW  Size (RW Data + ZI Data)              2976 (   2.91kB)
-    Total ROM Size (Code + RO Data + RW Data)       3860 (   3.77kB)
+    Total ROM Size (Code + RO Data + RW Data)       3880 (   3.79kB)
 
 ==============================================================================
 

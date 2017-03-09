@@ -465,6 +465,9 @@ void income_messages()
 
 int main()
 {	
+	volatile int i = 0;
+	while(i++ < 0x100000);
+	
 	mPLL_init();
 	mFSMC_init();
 	mUart_init();
